@@ -1,11 +1,14 @@
 package com.example.headunitplayground.ui
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.headunitplayground.R
 import com.example.headunitplayground.core.broadcast.VinReceiver
 import com.example.headunitplayground.databinding.ActivityMainBinding
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -91,5 +95,34 @@ class MainActivity : AppCompatActivity() {
         adapter = AppListAdapter(garminApps)
         binding.rvApp.layoutManager = LinearLayoutManager(this)
         binding.rvApp.adapter = adapter
+    }
+
+    fun bindService() {
+        val intent = Intent().apply {
+            component = ComponentName(VinReceiver.VIN_PACKAGE_NAME, VinReceiver.VIN_SERVICE_NAME)
+        }
+        val success = bindService(intent, object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                Log.d("VinServiceBinder", "bindService connected")
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                Log.d("VinServiceBinder", "bindService disconnected")
+            }
+        }, Context.BIND_AUTO_CREATE)
+        if (success) {
+            Log.d("VinServiceBinder", "bindService success")
+        } else {
+            Log.d("VinServiceBinder", "bindService failed")
+        }
+    }
+
+    fun startForegroundService() {
+        val vinIntent = Intent().apply {
+            component = ComponentName(VinReceiver.VIN_PACKAGE_NAME, VinReceiver.VIN_SERVICE_NAME)
+            action = VinReceiver.ACTION_GET_VIN
+        }
+
+        applicationContext.startForegroundService(vinIntent)
     }
 }
